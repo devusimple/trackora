@@ -21,16 +21,29 @@
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.trackora"
+      "package": "com.devusimple.trackora",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-sqlite",
-      "expo-font",
-      "expo-sharing",
+      [
+        "expo-font",
+        {}
+      ],
       "expo-file-system"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4b176c66-9a65-482a-8179-c9a2e581149b"
+      }
+    },
+    "owner": "devusimple"
   }
 }

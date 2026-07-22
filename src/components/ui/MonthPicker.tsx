@@ -122,7 +122,8 @@ export default function MonthPicker({ visible, onClose, theme, testID, onApply }
                             borderRadius: 12,
                             marginTop: 12,
                             borderWidth: StyleSheet.hairlineWidth,
-                            borderColor: colors.border
+                            borderColor: colors.border,
+                            backgroundColor: constants.colors.primary + "22"
                         }}>
                         <Text style={{
                             textAlign: 'center',
