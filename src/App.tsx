@@ -18,7 +18,12 @@ import { SQLiteProvider } from 'expo-sqlite';
 import AlertProvider from './components/ui/Alert';
 import { migrateDbIfNeeded } from './lib/db';
 import { RootStackParamList } from './lib/navigation';
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from 'react';
 
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 const AppStack = createNativeStackNavigator<RootStackParamList>({
   screenOptions: {
@@ -100,8 +105,16 @@ export default function App() {
     "HindSiliguri-Regular": require("@/assets/fonts/HindSiliguri-Regular.ttf")
   })
 
-  if (!loaded && error) return null;
-  if (!loaded) return null;
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
+  if (!loaded && !error) {
+    return null;
+  }
+
 
   return (
     <SQLiteProvider databaseName='trackora.db' onInit={migrateDbIfNeeded}>

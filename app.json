@@ -5,7 +5,6 @@
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
     "scheme": [
       "trackora",
       "finance",
@@ -37,7 +36,16 @@
         "expo-font",
         {}
       ],
-      "expo-file-system"
+      "expo-file-system",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "imageWidth": 200
+        }
+      ]
     ],
     "extra": {
       "eas": {

@@ -7,7 +7,7 @@ export default function Header() {
     const navigation = useNavigation<RootStackNavigationProp>();
     return (
         <View style={[styles.header]}>
-            <Image source={require('@/assets/icon.png')} style={{ width: 40, height: 40 }} />
+            <Image source={require('@/assets/logo.png')} style={{ width: 40, height: 40 }} />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <TouchableOpacity
                     onPress={() => navigation.navigate("settings")}

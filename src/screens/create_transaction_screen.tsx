@@ -145,6 +145,7 @@ export default function CreateTransactionScreen() {
                             keyboardType="numeric"
                             value={amount}
                             onChangeText={setAmount}
+                            placeholderTextColor={constants.colors.mute}
                         />
                     </View>
                 </View>
@@ -164,6 +165,7 @@ export default function CreateTransactionScreen() {
                             multiline
                             style={[styles.input]}
                             placeholder="Transaction details"
+                            placeholderTextColor={constants.colors.mute}
                         />
                     </View>
                 </View>

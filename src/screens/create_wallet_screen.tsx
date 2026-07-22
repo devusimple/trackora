@@ -48,7 +48,12 @@ export default function CreateWalletScreen() {
                         source={require("@/assets/icons/personalcard.png")}
                         style={{ width: 24, height: 24, tintColor: constants.colors.primary }}
                     />
-                    <TextInput onChangeText={setName} value={name} style={[styles.input]} placeholder="e.g My Cash" />
+                    <TextInput onChangeText={setName}
+                        value={name} style={[styles.input]}
+                        placeholder="e.g My Cash"
+                        placeholderTextColor={constants.colors.mute}
+
+                    />
                 </View>
 
                 <TouchableOpacity onPress={handleCreate} activeOpacity={0.7} style={[styles.submitBtn]}>
