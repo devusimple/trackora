@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     amount: {
         fontFamily: constants.fonts.HSR,
         fontSize: 16,
-        fontWeight: "semibold",
+        fontWeight: "600",
     },
     bottomRow: {
         flexDirection: "row",

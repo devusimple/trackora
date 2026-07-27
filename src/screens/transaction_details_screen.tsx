@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import {
     Image,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
-    ToastAndroid,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -13,6 +11,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { format } from "date-fns";
 import { constants } from "../utils/constants";
+import { toast } from "../utils/toast";
 import { deleteTransaction, getTransactionById } from "../lib/db";
 import { Transaction } from "../lib/db/types";
 import { RootStackNavigationProp, RootStackParamList } from "../lib/navigation";
@@ -26,13 +25,7 @@ export default function TransactionDetailsScreen() {
 
     const [tx, setTx] = useState<Transaction | null>(null);
 
-    function toast(message: string) {
-        if (Platform.OS === "android") {
-            ToastAndroid.show(message, ToastAndroid.LONG);
-        } else {
-            showAlert({ title: message });
-        }
-    }
+
 
     useEffect(() => {
         let cancelled = false;

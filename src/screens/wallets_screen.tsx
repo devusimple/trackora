@@ -1,31 +1,23 @@
 import { useCallback, useState } from "react";
 import {
-    Alert,
     FlatList,
     Image,
-    Platform,
     StyleSheet,
     Text,
-    ToastAndroid,
     TouchableOpacity,
     View,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { constants } from "../utils/constants";
+import { showToast } from "../utils/toast";
 import { getAllWallets, getTransactionSummaryByWallet, getTransactionCountByWallet } from "../lib/db";
 import type { Wallet } from "../lib/db/types";
 import { RootStackNavigationProp } from "../lib/navigation";
 
 type WalletWithStats = Wallet & { income: number; expense: number; count: number };
 
-function showToast(message: string) {
-    if (Platform.OS === "android") {
-        ToastAndroid.show(message, ToastAndroid.LONG);
-    } else {
-        Alert.alert(message);
-    }
-}
+
 
 function EmptyState() {
     return (

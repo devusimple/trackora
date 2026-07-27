@@ -2,10 +2,8 @@ import { useCallback, useState } from "react";
 import {
     FlatList,
     Image,
-    Platform,
     StyleSheet,
     Text,
-    ToastAndroid,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -13,6 +11,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { format } from "date-fns";
 import { constants } from "../utils/constants";
+import { toast } from "../utils/toast";
 import {
     getWalletById,
     getTransactionsByWallet,
@@ -41,13 +40,7 @@ export default function WalletDetailsScreen() {
 
     const [wallet, setWallet] = useState<Wallet | null>(null);
 
-    function toast(message: string) {
-        if (Platform.OS === "android") {
-            ToastAndroid.show(message, ToastAndroid.LONG);
-        } else {
-            showAlert({ title: message });
-        }
-    }
+
     const [summary, setSummary] = useState<TransactionSummary>({ total_income: 0, total_expense: 0, balance: 0 });
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [txCount, setTxCount] = useState(0);

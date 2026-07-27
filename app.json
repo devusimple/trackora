@@ -4,7 +4,7 @@
     "slug": "trackora",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/app-icon.png",
     "scheme": [
       "trackora",
       "finance",
@@ -17,7 +17,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "monochromeImage": "./assets/monochrome-icon.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.devusimple.trackora",
@@ -32,26 +33,23 @@
     },
     "plugins": [
       "expo-sqlite",
-      [
-        "expo-font",
-        {}
-      ],
+      "expo-font",
       "expo-file-system",
       [
         "expo-splash-screen",
         {
+          "backgroundColor": "#F5F5F5",
           "image": "./assets/splash-icon.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "imageWidth": 200
+          "imageWidth": 220
         }
       ]
     ],
     "extra": {
       "eas": {
-        "projectId": "4b176c66-9a65-482a-8179-c9a2e581149b"
+        "projectId": "4b176c66-9a65-482a-8179-c9a2e581149b",
       }
     },
-    "owner": "devusimple"
+    "owner": "devusimple",
+    "githubUrl": "https://github.com/devusimple/trackora",
   }
 }

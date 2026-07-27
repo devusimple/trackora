@@ -11,7 +11,11 @@ const MONTH_NAMES = [
 
 export default function SummaryCard() {
     const db = useSQLiteContext();
-    const { summaryType, setSummaryType, selectedMonth, summary, loadData } = store();
+    const summaryType = store((s) => s.summaryType);
+    const setSummaryType = store((s) => s.setSummaryType);
+    const selectedMonth = store((s) => s.selectedMonth);
+    const summary = store((s) => s.summary);
+    const loadData = store((s) => s.loadData);
 
     useEffect(() => {
         loadData(db);

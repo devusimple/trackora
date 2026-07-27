@@ -1,14 +1,37 @@
 import { useNavigation } from "@react-navigation/native";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { constants } from "../utils/constants";
 import { RootStackNavigationProp } from "../lib/navigation";
+import { toast } from "../utils/toast";
 
 export default function Header() {
     const navigation = useNavigation<RootStackNavigationProp>();
+    const insets = useSafeAreaInsets();
     return (
-        <View style={[styles.header]}>
+        <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? insets.top + 8 : 32 }]}>
             <Image source={require('@/assets/logo.png')} style={{ width: 40, height: 40 }} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TouchableOpacity
+                    onPress={() => {
+                        toast("Notification service comming soon")
+                    }}
+                    activeOpacity={0.7}
+                    style={[styles.actionBtn]}>
+                    <Image
+                        source={require("@/assets/icons/notification.png")}
+                        style={[styles.icon]}
+                    />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate("search")}
+                    activeOpacity={0.7}
+                    style={[styles.actionBtn]}>
+                    <Image
+                        source={require("@/assets/icons/receipt-search.png")}
+                        style={[styles.icon]}
+                    />
+                </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => navigation.navigate("settings")}
                     activeOpacity={0.7}
@@ -25,7 +48,6 @@ export default function Header() {
 
 const styles = StyleSheet.create({
     header: {
-        paddingTop: 32,
         paddingBottom: 16,
         paddingHorizontal: 16,
         backgroundColor: constants.colors.card,

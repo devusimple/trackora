@@ -1,15 +1,13 @@
 import { constants } from "../utils/constants";
+import { showToast } from "../utils/toast";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Image,
-    Platform,
     StyleSheet,
     Text,
     TextInput,
-    ToastAndroid,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -19,14 +17,6 @@ import { getAllWallets, getTransactionById, updateTransaction } from "../lib/db"
 import { Wallet } from "../lib/db/types";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackNavigationProp, RootStackParamList } from "../lib/navigation";
-
-function showToast(message: string) {
-    if (Platform.OS === "android") {
-        ToastAndroid.show(message, ToastAndroid.LONG);
-    } else {
-        Alert.alert(message);
-    }
-}
 
 export default function EditTransactionScreen() {
     const navigation = useNavigation<RootStackNavigationProp>();
@@ -89,15 +79,24 @@ export default function EditTransactionScreen() {
             showToast("Amount cannot be zero");
             return;
         }
+        const parsedAmount = Number(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            showToast("Amount must be a positive number");
+            return;
+        }
         if (!pickedWallet) {
             showToast("Please select a wallet");
+            return;
+        }
+        if (!selectedDate) {
+            showToast("Please select a date");
             return;
         }
         setLoading(true);
         try {
             await updateTransaction(db, transactionId, {
-                amount: Number(amount),
-                date: toISODate(selectedDate!),
+                amount: parsedAmount,
+                date: toISODate(selectedDate),
                 note,
                 type,
                 wallet_id: pickedWallet.value,

@@ -186,6 +186,13 @@ export async function getTransactionSummaryByMonth(
     return getTransactionSummary(db, startDate, endDate);
 }
 
+export async function getTotalTransactionCount(db: SQLite.SQLiteDatabase): Promise<number> {
+    const result = await db.getFirstAsync<{ count: number }>(
+        "SELECT COUNT(*) as count FROM transactions",
+    );
+    return result?.count ?? 0;
+}
+
 export async function getTransactionCountByWallet(
     db: SQLite.SQLiteDatabase,
     walletId: number,
@@ -251,6 +258,93 @@ export async function getTransactionSummaryByWallet(
     const total_expense = result?.total_expense ?? 0;
 
     return { total_income, total_expense, balance: total_income - total_expense };
+}
+
+// ─── Search ────────────────────────────────────────────
+
+export interface SearchFilters {
+    type?: "income" | "expense" | "all";
+    walletId?: number;
+    dateFrom?: string;
+    dateTo?: string;
+}
+
+export async function searchTransactions(
+    db: SQLite.SQLiteDatabase,
+    query: string,
+    filters?: SearchFilters,
+): Promise<Transaction[]> {
+    const params: (string | number)[] = [];
+    const conditions: string[] = [];
+
+    if (query.trim()) {
+        const terms = query.trim().split(/\s+/).filter(Boolean);
+        const termConditions: string[] = [];
+
+        for (const term of terms) {
+            const num = parseFloat(term);
+            if (!isNaN(num)) {
+                params.push(num);
+                params.push(`%${term}%`, `%${term}%`, `%${term}%`);
+                termConditions.push(
+                    "(t.amount = ? OR t.note LIKE ? OR w.name LIKE ? OR t.date LIKE ?)",
+                );
+            } else {
+                params.push(`%${term}%`, `%${term}%`, `%${term}%`);
+                termConditions.push(
+                    "(t.note LIKE ? OR w.name LIKE ? OR t.date LIKE ?)",
+                );
+            }
+        }
+
+        if (termConditions.length > 0) {
+            conditions.push(`(${termConditions.join(" AND ")})`);
+        }
+    }
+
+    if (filters?.type && filters.type !== "all") {
+        params.push(filters.type);
+        conditions.push("t.type = ?");
+    }
+
+    if (filters?.walletId) {
+        params.push(filters.walletId);
+        conditions.push("t.wallet_id = ?");
+    }
+
+    if (filters?.dateFrom) {
+        params.push(filters.dateFrom);
+        conditions.push("t.date >= ?");
+    }
+
+    if (filters?.dateTo) {
+        params.push(filters.dateTo);
+        conditions.push("t.date <= ?");
+    }
+
+    const where =
+        conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    return db.getAllAsync<Transaction>(
+        `SELECT t.*, w.name AS wallet_name
+        FROM transactions t
+        JOIN wallets w ON w.id = t.wallet_id
+        ${where}
+        ORDER BY t.date DESC, t.created_at DESC
+        LIMIT 100`,
+        ...params,
+    );
+}
+
+export async function searchWallets(
+    db: SQLite.SQLiteDatabase,
+    query: string,
+): Promise<Wallet[]> {
+    if (!query.trim()) return [];
+    return db.getAllAsync<Wallet>(
+        "SELECT * FROM wallets WHERE name LIKE ? ORDER BY name LIMIT 20",
+        `%${query.trim()}%`,
+    );
 }
 
 export async function getAllTransactionsUnfiltered(db: SQLite.SQLiteDatabase): Promise<Transaction[]> {

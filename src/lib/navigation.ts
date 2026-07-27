@@ -11,6 +11,7 @@ export type RootStackParamList = {
     wallets: undefined;
     walletDetails: { walletId: number };
     editWallet: { walletId: number };
+    search: undefined
 };
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;

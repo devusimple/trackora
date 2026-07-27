@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import {
     Image,
     Linking,
-    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    ToastAndroid,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -15,7 +13,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import AsyncStorage from "expo-sqlite/kv-store";
 import { constants } from "../utils/constants";
-import { clearAllData, clearAllTransactions, getAllWallets, getTransactionSummary } from "../lib/db";
+import { toast } from "../utils/toast";
+import { clearAllData, clearAllTransactions, getAllWallets, getTotalTransactionCount } from "../lib/db";
 import { Wallet } from "../lib/db/types";
 import ModalPicker, { PickerItem } from "../components/ui/Picker";
 import { RootStackNavigationProp } from "../lib/navigation";
@@ -30,25 +29,19 @@ export default function SettingsScreen() {
     const [visibleWalletPicker, setVisibleWalletPicker] = useState(false);
     const [stats, setStats] = useState({ wallets: 0, transactions: 0 });
 
-    function toast(message: string) {
-        if (Platform.OS === "android") {
-            ToastAndroid.show(message, ToastAndroid.LONG);
-        } else {
-            showAlert({ title: message });
-        }
-    }
+
 
     useEffect(() => {
         let cancelled = false;
 
         async function load() {
-            const [w, s] = await Promise.all([
+            const [w, count] = await Promise.all([
                 getAllWallets(db),
-                getTransactionSummary(db),
+                getTotalTransactionCount(db),
             ]);
             if (cancelled) return;
             setWallets(w);
-            setStats({ wallets: w.length, transactions: 0 });
+            setStats({ wallets: w.length, transactions: count });
 
             const stored = await AsyncStorage.getItemAsync("@default_wallet_id");
             if (cancelled) return;

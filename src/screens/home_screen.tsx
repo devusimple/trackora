@@ -1,10 +1,11 @@
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { FlatList, Image, Platform, StyleSheet, Text, ToastAndroid, View } from "react-native";
+import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import FAB from "../components/fab";
 import FilterCard from "../components/filter-card";
 import SummaryCard from "../components/summary-card";
 import TransactionItem from "../components/transaction-item";
 import { constants } from "../utils/constants";
+import { toast } from "../utils/toast";
 import { useCallback, useEffect } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { store, SummaryType } from "../lib/store";
@@ -57,14 +58,6 @@ export default function HomeScreen() {
     const navigation = useNavigation<RootStackNavigationProp>();
 
     const { transactions, summaryType, filterType, selectedMonth, loadData } = store();
-
-    function toast(message: string) {
-        if (Platform.OS === "android") {
-            ToastAndroid.show(message, ToastAndroid.LONG);
-        } else {
-            showAlert({ title: message });
-        }
-    }
 
     useFocusEffect(
         useCallback(() => {

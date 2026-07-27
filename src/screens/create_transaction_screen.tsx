@@ -1,22 +1,15 @@
 import { constants } from "../utils/constants";
+import { showToast } from "../utils/toast";
 import { useSQLiteContext } from "expo-sqlite";
 import AsyncStorage from "expo-sqlite/kv-store";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Platform, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import DatePickerModal from "../components/ui/DatePickerModal";
 import ModalPicker, { PickerItem } from "../components/ui/Picker";
 import { createTransaction, getAllWallets, getWalletById } from "../lib/db";
 import { Wallet } from "../lib/db/types";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackNavigationProp } from "../lib/navigation";
-
-function showToast(message: string) {
-    if (Platform.OS === "android") {
-        ToastAndroid.show(message, ToastAndroid.LONG);
-    } else {
-        Alert.alert(message);
-    }
-}
 
 export default function CreateTransactionScreen() {
     const navigation = useNavigation<RootStackNavigationProp>();
@@ -67,14 +60,23 @@ export default function CreateTransactionScreen() {
             showToast("Amount cannot be zero");
             return;
         }
+        const parsedAmount = Number(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            showToast("Amount must be a positive number");
+            return;
+        }
+        if (!pickedWallet) {
+            showToast("Please select a wallet");
+            return;
+        }
         setLoading(true);
         try {
             await createTransaction(db, {
-                amount: Number(amount),
+                amount: parsedAmount,
                 date: toISODate(selectedDate!),
                 note,
                 type,
-                wallet_id: pickedWallet?.value ?? 0,
+                wallet_id: pickedWallet.value,
             });
             showToast("Transaction created successfully");
             navigation.goBack();

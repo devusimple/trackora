@@ -1,18 +1,11 @@
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { ActivityIndicator, Alert, Image, Platform, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { createWallet } from "../lib/db";
 import { constants } from "../utils/constants";
+import { showToast } from "../utils/toast";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackNavigationProp } from "../lib/navigation";
-
-function showToast(message: string) {
-    if (Platform.OS === "android") {
-        ToastAndroid.show(message, ToastAndroid.LONG);
-    } else {
-        Alert.alert(message);
-    }
-}
 
 export default function CreateWalletScreen() {
     const navigation = useNavigation<RootStackNavigationProp>();

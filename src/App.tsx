@@ -20,9 +20,9 @@ import { migrateDbIfNeeded } from './lib/db';
 import { RootStackParamList } from './lib/navigation';
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from 'react';
+import SearchScreen from './screens/search_screen';
 
 
-// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 const AppStack = createNativeStackNavigator<RootStackParamList>({
@@ -95,6 +95,12 @@ const AppStack = createNativeStackNavigator<RootStackParamList>({
         title: "Edit Wallet",
       }
     },
+    search: {
+      screen: SearchScreen,
+      options: {
+        title: "Search",
+      }
+    }
   }
 });
 const Navigation = createStaticNavigation(AppStack);

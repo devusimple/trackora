@@ -10,7 +10,6 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    ToastAndroid,
     TouchableWithoutFeedback,
     View,
     ActivityIndicator,
@@ -22,6 +21,7 @@ import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Paths } from "expo-file-system";
 import { constants, MONTH_NAMES, pad } from "../utils/constants";
+import { showToast } from "../utils/toast";
 import { getAllWallets, getExportData, importDataFromJSON } from "../lib/db";
 import type { Wallet, ExportData } from "../lib/db/types";
 import ModalPicker, { PickerItem } from "../components/ui/Picker";
@@ -30,13 +30,7 @@ import MonthPicker from "../components/ui/MonthPicker";
 type TimeRange = "all" | "month" | "year";
 type Tab = "export" | "import";
 
-function showToast(message: string) {
-    if (Platform.OS === "android") {
-        ToastAndroid.show(message, ToastAndroid.LONG);
-    } else {
-        Alert.alert(message);
-    }
-}
+
 
 function generateHTML(data: ExportData, walletName?: string): string {
     const rows = data.transactions
@@ -366,7 +360,8 @@ export default function ExportDataScreen() {
         } catch (err: any) {
             showToast("File picker error: " + err.message);
         } finally {
-            if (!loading) setLoadingMessage("");
+            setLoading(false);
+            setLoadingMessage("");
         }
     }, [db]);
 

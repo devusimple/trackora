@@ -1,29 +1,19 @@
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Image,
-    Platform,
     StyleSheet,
     Text,
     TextInput,
-    ToastAndroid,
     TouchableOpacity,
     View,
 } from "react-native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { constants } from "../utils/constants";
+import { showToast } from "../utils/toast";
 import { getWalletById, updateWallet } from "../lib/db";
 import { RootStackNavigationProp, RootStackParamList } from "../lib/navigation";
-
-function showToast(message: string) {
-    if (Platform.OS === "android") {
-        ToastAndroid.show(message, ToastAndroid.LONG);
-    } else {
-        Alert.alert(message);
-    }
-}
 
 export default function EditWalletScreen() {
     const navigation = useNavigation<RootStackNavigationProp>();
