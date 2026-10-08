@@ -1,49 +1,53 @@
+import * as DocumentPicker from "expo-document-picker";
+import { File, Paths } from "expo-file-system";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
     Animated,
-    Keyboard,
+    Image,
     KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
-    TouchableWithoutFeedback,
-    View,
-    ActivityIndicator,
-    Image,
+    View
 } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
-import * as DocumentPicker from "expo-document-picker";
-import { File, Paths } from "expo-file-system";
-import { constants, MONTH_NAMES, pad } from "../utils/constants";
-import { showToast } from "../utils/toast";
-import { getAllWallets, getExportData, importDataFromJSON } from "../lib/db";
-import type { Wallet, ExportData } from "../lib/db/types";
-import ModalPicker, { PickerItem } from "../components/ui/Picker";
 import MonthPicker from "../components/ui/MonthPicker";
+import ModalPicker, { PickerItem } from "../components/ui/Picker";
+import { getAllWallets, getExportData, importDataFromJSON } from "../lib/db";
+import type { ExportData, Wallet } from "../lib/db/types";
+import { constants, MONTH_NAMES, pad, formatAmount } from "../utils/constants";
+import { showToast } from "../utils/toast";
 
 type TimeRange = "all" | "month" | "year";
 type Tab = "export" | "import";
 
-
+function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 
 function generateHTML(data: ExportData, walletName?: string): string {
     const rows = data.transactions
         .map(
             (t) => `
         <tr>
-            <td>${t.date}</td>
-            <td style="text-transform:capitalize">${t.type}</td>
+            <td>${escapeHtml(t.date)}</td>
+            <td style="text-transform:capitalize">${escapeHtml(t.type)}</td>
             <td style="text-align:right;font-weight:600;color:${t.type === "income" ? "#16a34a" : "#dc2626"}">
-                ${t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)}
+                ${t.type === "income" ? "+" : "-"}${escapeHtml(formatAmount(t.amount))}
             </td>
-            <td>${walletName || t.wallet_name || "N/A"}</td>
-            <td>${t.note || "-"}</td>
+            <td>${escapeHtml(walletName || t.wallet_name || "N/A")}</td>
+            <td>${escapeHtml(t.note) || "-"}</td>
         </tr>`,
         )
         .join("");
@@ -89,22 +93,22 @@ function generateHTML(data: ExportData, walletName?: string): string {
     </style>
 </head>
 <body>
-    <div class="header">
+        <div class="header">
         <h1>Trackora</h1>
-        <div class="subtitle">${dateLabel}${walletName ? ` · ${walletName}` : ""} · Exported ${new Date(data.exported_at).toLocaleDateString()}</div>
+        <div class="subtitle">${escapeHtml(dateLabel)}${walletName ? ` · ${escapeHtml(walletName)}` : ""} · Exported ${escapeHtml(new Date(data.exported_at).toLocaleDateString())}</div>
     </div>
     <div class="summary">
         <div class="item">
             <div class="label">Income</div>
-            <div class="value income">+${data.summary.total_income.toFixed(2)}</div>
+            <div class="value income">+${escapeHtml(formatAmount(data.summary.total_income))}</div>
         </div>
         <div class="item">
             <div class="label">Expense</div>
-            <div class="value expense">-${data.summary.total_expense.toFixed(2)}</div>
+            <div class="value expense">-${escapeHtml(formatAmount(data.summary.total_expense))}</div>
         </div>
         <div class="item">
             <div class="label">Balance</div>
-            <div class="value balance">${data.summary.balance >= 0 ? "+" : ""}${data.summary.balance.toFixed(2)}</div>
+            <div class="value balance">${data.summary.balance >= 0 ? "+" : ""}${escapeHtml(formatAmount(data.summary.balance))}</div>
         </div>
     </div>
     <table>
@@ -160,8 +164,6 @@ export default function ExportDataScreen() {
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
     const [walletPickerVisible, setWalletPickerVisible] = useState(false);
-    const [importModalVisible, setImportModalVisible] = useState(false);
-    const [pasteJson, setPasteJson] = useState("");
 
     const importedFileRef = useRef<string | null>(null);
 
@@ -365,38 +367,6 @@ export default function ExportDataScreen() {
         }
     }, [db]);
 
-    const handlePasteImport = useCallback(async () => {
-        const trimmed = pasteJson.trim();
-        if (!trimmed) {
-            showToast("Please paste JSON data first");
-            return;
-        }
-
-        let parsed: ExportData;
-        try {
-            parsed = parseAndValidateJSON(trimmed);
-        } catch (e: any) {
-            showToast(e.message);
-            return;
-        }
-
-        try {
-            setLoading(true);
-            setLoadingMessage("Importing pasted data...");
-            const importResult = await importDataFromJSON(db, parsed);
-            await getAllWallets(db).then(setWallets);
-            showToast(
-                `Imported ${importResult.transactionsImported} transaction${importResult.transactionsImported !== 1 ? "s" : ""}, ${importResult.walletsCreated} wallet${importResult.walletsCreated !== 1 ? "s" : ""} created`,
-            );
-            setPasteJson("");
-            setImportModalVisible(false);
-        } catch (err: any) {
-            showToast("Import failed: " + err.message);
-        } finally {
-            setLoading(false);
-            setLoadingMessage("");
-        }
-    }, [db, pasteJson]);
 
     return (
         <View style={styles.root}>
@@ -470,52 +440,53 @@ export default function ExportDataScreen() {
                                             </Pressable>
                                         </View>
                                     ))}
+
+                                    {timeRange === "month" && (
+                                        <>
+                                            <View style={styles.divider} />
+                                            <Pressable
+                                                style={styles.dateRow}
+                                                android_ripple={RIPPLE}
+                                                onPress={() => setMonthPickerVisible(true)}
+                                            >
+                                                <Image source={require("@/assets/icons/calendar-edit.png")} style={styles.calEditIcon} />
+                                                <Text style={styles.dateRowLabel}>
+                                                    {MONTH_NAMES[selectedMonth]} {selectedYear}
+                                                </Text>
+                                                <Image source={require("@/assets/icons/arrow-down4.png")} style={styles.calArrowIcon} />
+                                            </Pressable>
+                                        </>
+                                    )}
+
+                                    {timeRange === "year" && (
+                                        <>
+                                            <View style={styles.divider} />
+                                            <View style={styles.yearRow}>
+                                                <Pressable
+                                                    style={({ pressed }) => [
+                                                        styles.yearBtn,
+                                                        pressed && { backgroundColor: constants.colors.border },
+                                                    ]}
+                                                    android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: false }}
+                                                    onPress={() => setSelectedYear((y) => y - 1)}
+                                                >
+                                                    <Image source={require("@/assets/icons/chevron-left.png")} style={styles.chevronIcon} />
+                                                </Pressable>
+                                                <Text style={styles.yearText}>{selectedYear}</Text>
+                                                <Pressable
+                                                    style={({ pressed }) => [
+                                                        styles.yearBtn,
+                                                        pressed && { backgroundColor: constants.colors.border },
+                                                    ]}
+                                                    android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: false }}
+                                                    onPress={() => setSelectedYear((y) => y + 1)}
+                                                >
+                                                    <Image source={require("@/assets/icons/chevron-right.png")} style={styles.chevronIcon} />
+                                                </Pressable>
+                                            </View>
+                                        </>
+                                    )}
                                 </View>
-
-                                {timeRange === "month" && (
-                                    <Pressable
-                                        style={({ pressed }) => [
-                                            styles.pickerButton,
-                                            pressed && { opacity: 0.8 },
-                                            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }
-                                        ]}
-                                        android_ripple={RIPPLE}
-                                        onPress={() => setMonthPickerVisible(true)}
-                                    >
-                                        <Image source={require("@/assets/icons/calendar-edit.png")} style={[{ tintColor: constants.colors.info, width: 24, height: 24 }]} />
-                                        <Text style={styles.pickerButtonText}>
-                                            {MONTH_NAMES[selectedMonth]} {selectedYear}
-                                        </Text>
-                                        <Image source={require("@/assets/icons/arrow-down4.png")} style={[{ tintColor: constants.colors.mute, width: 20, height: 20 }]} />
-                                    </Pressable>
-                                )}
-
-                                {timeRange === "year" && (
-                                    <View style={styles.yearRow}>
-                                        <Pressable
-                                            style={({ pressed }) => [
-                                                styles.yearBtn,
-                                                pressed && { backgroundColor: constants.colors.border },
-                                            ]}
-                                            android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: true }}
-                                            onPress={() => setSelectedYear((y) => y - 1)}
-                                        >
-                                            <Image source={require("@/assets/icons/chevron-left.png")} style={[{ tintColor: constants.colors.primary, width: 16, height: 16 }]} />
-                                        </Pressable>
-                                        <Text style={styles.yearText}>{selectedYear}</Text>
-                                        <Pressable
-                                            style={({ pressed }) => [
-                                                styles.yearBtn,
-                                                pressed && { backgroundColor: constants.colors.border },
-                                            ]}
-                                            android_ripple={{ color: "rgba(0,0,0,0.12)", borderless: true }}
-                                            onPress={() => setSelectedYear((y) => y + 1)}
-                                        >
-
-                                            <Image source={require("@/assets/icons/chevron-right.png")} style={[{ tintColor: constants.colors.primary, width: 16, height: 16 }]} />
-                                        </Pressable>
-                                    </View>
-                                )}
 
                                 {/* ── Wallet ── */}
                                 <Text style={styles.sectionTitle}>Wallet</Text>
@@ -530,69 +501,83 @@ export default function ExportDataScreen() {
                                     >
                                         <View style={styles.rowLeft}>
                                             <View style={[styles.iconCircle, { backgroundColor: constants.colors.primary + "18" }]}>
-                                                <Image source={require("@/assets/icons/wallet.png")} style={[{ tintColor: constants.colors.primary, width: 20, height: 20 }]} />
+                                                <Image source={require("@/assets/icons/wallet.png")} style={styles.walletIcon} />
                                             </View>
                                             <Text style={styles.rowLabel}>{selectedWalletName}</Text>
                                         </View>
-                                        <Image source={require("@/assets/icons/arrow-down4.png")} style={[{ tintColor: constants.colors.mute, width: 16, height: 16 }]} />
+                                        <Image source={require("@/assets/icons/arrow-down4.png")} style={styles.smallDownIcon} />
                                     </Pressable>
                                 </View>
 
-                                {/* ── Summary chip ── */}
-                                <View style={styles.summaryChip}>
-                                    <Text style={styles.summaryChipText}>{timeRangeLabel}</Text>
-                                    <View style={styles.summaryChipDot} />
-                                    <Text style={styles.summaryChipText}>{selectedWalletName}</Text>
+                                {/* ── Selection Summary ── */}
+                                <View style={styles.selectionCard}>
+                                    <View style={[styles.selectionIconWrap, { backgroundColor: constants.colors.primary + "15" }]}>
+                                        <Image source={require("@/assets/icons/calendar-31.png")} style={[styles.selectionIcon, { tintColor: constants.colors.primary }]} />
+                                    </View>
+                                    <View style={styles.selectionBody}>
+                                        <Text style={styles.selectionLabel}>PERIOD</Text>
+                                        <Text style={styles.selectionValue}>{timeRangeLabel}</Text>
+                                    </View>
+                                    <View style={styles.selectionDivider} />
+                                    <View style={[styles.selectionIconWrap, { backgroundColor: constants.colors.info + "15" }]}>
+                                        <Image source={require("@/assets/icons/wallet.png")} style={[styles.selectionIcon, { tintColor: constants.colors.info }]} />
+                                    </View>
+                                    <View style={styles.selectionBody}>
+                                        <Text style={styles.selectionLabel}>WALLET</Text>
+                                        <Text style={styles.selectionValue} numberOfLines={1}>{selectedWalletName}</Text>
+                                    </View>
                                 </View>
 
                                 {/* ── Export Actions ── */}
                                 <Text style={styles.sectionTitle}>Export To</Text>
 
-                                <Pressable
-                                    style={({ pressed }) => [
-                                        styles.exportCard,
-                                        pressed && styles.exportCardPressed,
-                                    ]}
-                                    android_ripple={RIPPLE_LIGHT}
-                                    onPress={handleExportJSON}
-                                    disabled={loading}
-                                >
-                                    <View style={[styles.exportIconWrap, { backgroundColor: constants.colors.primary }]}>
-                                        <Image source={require("@/assets/icons/json.png")} style={[{ tintColor: "#fff", width: 20, height: 20 }]} />
-                                    </View>
-                                    <View style={styles.exportBody}>
-                                        <Text style={styles.exportTitle}>JSON File</Text>
-                                        <Text style={styles.exportDesc}>Raw data file — share to any app</Text>
-                                    </View>
-                                    <Image source={require("@/assets/icons/chevron-right.png")} style={[{ tintColor: constants.colors.mute, width: 16, height: 16 }]} />
-                                </Pressable>
+                                <View style={styles.exportRow}>
+                                    <Pressable
+                                        style={({ pressed }) => [
+                                            styles.exportTile,
+                                            styles.exportTilePrimary,
+                                            pressed && styles.exportTilePrimaryPressed,
+                                        ]}
+                                        android_ripple={RIPPLE_LIGHT}
+                                        onPress={handleExportJSON}
+                                        disabled={loading}
+                                    >
+                                        <View style={styles.exportTileIconWrap}>
+                                            <Image source={require("@/assets/icons/json.png")} style={styles.exportTileIcon} />
+                                        </View>
+                                        <Text style={[styles.exportTileTitle, styles.exportTileTitlePrimary]}>JSON File</Text>
+                                        <Text style={[styles.exportTileDesc, styles.exportTileDescPrimary]}>Raw data file</Text>
+                                        <View style={styles.exportTileAction}>
+                                            <Text style={styles.exportTileActionText}>Share</Text>
+                                        </View>
+                                    </Pressable>
 
-                                <View style={styles.exportSpacer} />
-
-                                <Pressable
-                                    style={({ pressed }) => [
-                                        styles.exportCard,
-                                        pressed && styles.exportCardPressed,
-                                    ]}
-                                    android_ripple={RIPPLE_LIGHT}
-                                    onPress={handlePrintHTML}
-                                    disabled={loading}
-                                >
-                                    <View style={[styles.exportIconWrap, { backgroundColor: constants.colors.info }]}>
-                                        <Text style={styles.exportIcon}>PDF</Text>
-                                    </View>
-                                    <View style={styles.exportBody}>
-                                        <Text style={styles.exportTitle}>PDF Report</Text>
-                                        <Text style={styles.exportDesc}>Formatted table with summary — share or print</Text>
-                                    </View>
-                                    <Image source={require("@/assets/icons/chevron-right.png")} style={[{ tintColor: constants.colors.mute, width: 16, height: 16 }]} />
-                                </Pressable>
+                                    <Pressable
+                                        style={({ pressed }) => [
+                                            styles.exportTile,
+                                            styles.exportTileSecondary,
+                                            pressed && styles.exportTileSecondaryPressed,
+                                        ]}
+                                        android_ripple={RIPPLE}
+                                        onPress={handlePrintHTML}
+                                        disabled={loading}
+                                    >
+                                        <View style={[styles.exportTileIconWrap, { backgroundColor: constants.colors.info + "18" }]}>
+                                            <Text style={styles.exportTilePdf}>PDF</Text>
+                                        </View>
+                                        <Text style={[styles.exportTileTitle, { color: constants.colors.foreground }]}>PDF Report</Text>
+                                        <Text style={[styles.exportTileDesc, { color: constants.colors.mute }]}>Formatted summary</Text>
+                                        <View style={styles.exportTileAction}>
+                                            <Text style={styles.exportTileActionText}>Share</Text>
+                                        </View>
+                                    </Pressable>
+                                </View>
                             </View>
                         ) : (
                             /* ══════ IMPORT TAB ══════ */
                             <View>
                                 <Text style={styles.importHeading}>Bring data into Trackora</Text>
-                                <Text style={styles.importSub}>Choose a file you exported before or paste the JSON directly.</Text>
+                                <Text style={styles.importSub}>Choose a Trackora JSON export file from your device to restore your data.</Text>
 
                                 {/* ── From File ── */}
                                 <View style={styles.importSection}>
@@ -606,15 +591,15 @@ export default function ExportDataScreen() {
                                         disabled={loading}
                                     >
                                         <View style={[styles.importBigIcon, { backgroundColor: constants.colors.primary + "18" }]}>
-                                            <Image source={require("@/assets/icons/folder.png")} style={[{ width: 28, height: 28, tintColor: constants.colors.warning }]} />
+                                            <Image source={require("@/assets/icons/folder.png")} style={styles.folderIcon} />
                                         </View>
-                                        <View style={{ flex: 1 }}>
+                                        <View style={styles.importBody}>
                                             <Text style={styles.importCardTitle}>Import from File</Text>
                                             <Text style={styles.importCardDesc}>
                                                 Pick a Trackora JSON export file from your device
                                             </Text>
                                         </View>
-                                        <Image source={require("@/assets/icons/chevron-right.png")} style={[{ tintColor: constants.colors.mute, width: 16, height: 16 }]} />
+                                        <Image source={require("@/assets/icons/chevron-right.png")} style={styles.chevronIconMute} />
                                     </Pressable>
                                 </View>
 
@@ -627,30 +612,6 @@ export default function ExportDataScreen() {
                                     </View>
                                 )}
 
-                                {/* ── Paste JSON ── */}
-                                <View style={styles.importSection}>
-                                    <Pressable
-                                        style={({ pressed }) => [
-                                            styles.importCard,
-                                            pressed && styles.importCardPressed,
-                                        ]}
-                                        android_ripple={RIPPLE_LIGHT}
-                                        onPress={() => setImportModalVisible(true)}
-                                        disabled={loading}
-                                    >
-                                        <View style={[styles.importBigIcon, { backgroundColor: constants.colors.info + "18" }]}>
-                                            <Image source={require("@/assets/icons/clipboard.png")} style={[{ width: 28, height: 28, tintColor: constants.colors.info }]} />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={styles.importCardTitle}>Paste JSON</Text>
-                                            <Text style={styles.importCardDesc}>
-                                                Copy-paste raw JSON data directly
-                                            </Text>
-                                        </View>
-                                        <Image source={require("@/assets/icons/chevron-right.png")} style={[{ tintColor: constants.colors.mute, width: 16, height: 16 }]} />
-                                    </Pressable>
-                                </View>
-
                                 {/* ── Hint ── */}
                                 <View style={styles.hintBox}>
                                     <Text style={styles.hintIcon}>💡</Text>
@@ -659,62 +620,6 @@ export default function ExportDataScreen() {
                                     </Text>
                                 </View>
                             </View>
-                        )}
-
-                        {/* ── Paste Import Modal ─────────────────── */}
-                        {importModalVisible && (
-                            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                                <View style={styles.modalOverlay}>
-                                    <TouchableWithoutFeedback onPress={() => { }}>
-                                        <View style={styles.modalCard}>
-                                            <Text style={styles.modalTitle}>Paste Trackora JSON</Text>
-                                            <TextInput
-                                                style={styles.modalInput}
-                                                placeholder="Paste your exported JSON here..."
-                                                placeholderTextColor={constants.colors.mute}
-                                                multiline
-                                                value={pasteJson}
-                                                onChangeText={setPasteJson}
-                                                autoCapitalize="none"
-                                                autoCorrect={false}
-                                                textAlignVertical="top"
-                                            />
-                                            <View style={styles.modalActions}>
-                                                <Pressable
-                                                    style={({ pressed }) => [
-                                                        styles.modalBtn,
-                                                        styles.modalBtnCancel,
-                                                        pressed && { opacity: 0.7 },
-                                                    ]}
-                                                    android_ripple={{ color: "rgba(0,0,0,0.08)" }}
-                                                    onPress={() => {
-                                                        setImportModalVisible(false);
-                                                        setPasteJson("");
-                                                    }}
-                                                >
-                                                    <Text style={[styles.modalBtnText, { color: constants.colors.foreground }]}>
-                                                        Cancel
-                                                    </Text>
-                                                </Pressable>
-                                                <Pressable
-                                                    style={({ pressed }) => [
-                                                        styles.modalBtn,
-                                                        styles.modalBtnConfirm,
-                                                        pressed && { opacity: 0.85 },
-                                                    ]}
-                                                    android_ripple={{ color: "rgba(0,0,0,0.12)" }}
-                                                    onPress={handlePasteImport}
-                                                    disabled={loading}
-                                                >
-                                                    <Text style={[styles.modalBtnText, { color: "#fff" }]}>
-                                                        {loading ? "Importing..." : "Import"}
-                                                    </Text>
-                                                </Pressable>
-                                            </View>
-                                        </View>
-                                    </TouchableWithoutFeedback>
-                                </View>
-                            </TouchableWithoutFeedback>
                         )}
                     </ScrollView>
                 </Animated.View>
@@ -763,28 +668,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 4,
         paddingBottom: 40,
-    },
-
-    // ─── Header ─────────────────────────────────────
-    header: {
-        paddingTop: Platform.OS === "ios" ? 56 : 16,
-        paddingBottom: 8,
-        paddingHorizontal: 20,
-        backgroundColor: constants.colors.card,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: constants.colors.border,
-    },
-    headerTitle: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 20,
-        fontWeight: "700",
-        color: constants.colors.foreground,
-    },
-    headerSub: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 13,
-        color: constants.colors.mute,
-        marginTop: 2,
     },
 
     // ─── Tab Bar ────────────────────────────────────
@@ -865,11 +748,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    iconText: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 16,
-        fontWeight: "700",
-    },
     rowLabel: {
         fontFamily: constants.fonts.HSR,
         fontSize: 15,
@@ -881,11 +759,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: constants.colors.primary,
         fontWeight: "500",
-    },
-    chevron: {
-        fontSize: 20,
-        color: constants.colors.mute,
-        fontWeight: "300",
     },
     radio: {
         width: 20,
@@ -910,47 +783,72 @@ const styles = StyleSheet.create({
         backgroundColor: constants.colors.border,
         marginLeft: 48,
     },
-    pickerButton: {
-        marginTop: 8,
-        backgroundColor: constants.colors.card,
-        borderRadius: 12,
-        borderColor: constants.colors.border,
-        borderWidth: StyleSheet.hairlineWidth,
-        paddingVertical: 14,
-        paddingHorizontal: 16,
+    dateRow: {
+        flexDirection: "row",
         alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 14,
+        paddingVertical: 14,
     },
-    pickerButtonText: {
+    dateRowLabel: {
         fontFamily: constants.fonts.HSR,
         fontSize: 15,
         fontWeight: "500",
         color: constants.colors.primary,
     },
+    calEditIcon: {
+        tintColor: constants.colors.info,
+        width: 24,
+        height: 24,
+    },
+    calArrowIcon: {
+        tintColor: constants.colors.mute,
+        width: 20,
+        height: 20,
+    },
+    chevronIcon: {
+        tintColor: constants.colors.primary,
+        width: 16,
+        height: 16,
+    },
+    chevronIconMute: {
+        tintColor: constants.colors.mute,
+        width: 16,
+        height: 16,
+    },
+    walletIcon: {
+        tintColor: constants.colors.primary,
+        width: 20,
+        height: 20,
+    },
+    smallDownIcon: {
+        tintColor: constants.colors.mute,
+        width: 16,
+        height: 16,
+    },
+    folderIcon: {
+        width: 28,
+        height: 28,
+        tintColor: constants.colors.warning,
+    },
     yearRow: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        marginTop: 8,
         gap: 24,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
         overflow: 'hidden',
-        borderRadius: 8,
-        backgroundColor: constants.colors.card
     },
     yearBtn: {
-        width: 100,
+        flex: 1,
         height: 40,
-        // backgroundColor: constants.colors.primary,
         backgroundColor: constants.colors.primary + "22",
         borderColor: constants.colors.border,
         borderWidth: StyleSheet.hairlineWidth,
+        borderRadius: 8,
         alignItems: "center",
         justifyContent: "center",
-    },
-    yearBtnText: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 20,
-        fontWeight: "600",
-        color: constants.colors.foreground,
     },
     yearText: {
         fontFamily: constants.fonts.HSR,
@@ -961,77 +859,129 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
 
-    // ─── Summary chip ──────────────────────────────
-    summaryChip: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: 12,
-        gap: 8,
-    },
-    summaryChipDot: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: constants.colors.mute,
-    },
-    summaryChipText: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 12,
-        color: constants.colors.mute,
-        fontWeight: "500",
-    },
-
-    // ─── Export Cards ──────────────────────────────
-    exportSpacer: {
-        height: 10,
-    },
-    exportCard: {
+    // ─── Selection Summary ────────────────────────
+    selectionCard: {
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: constants.colors.card,
+        borderRadius: 12,
+        borderColor: constants.colors.border,
+        borderWidth: StyleSheet.hairlineWidth,
+        marginTop: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+    },
+    selectionIconWrap: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    selectionIcon: {
+        width: 18,
+        height: 18,
+    },
+    selectionBody: {
+        flex: 1,
+        marginLeft: 10,
+    },
+    selectionLabel: {
+        fontFamily: constants.fonts.HSR,
+        fontSize: 10,
+        fontWeight: "600",
+        color: constants.colors.mute,
+        letterSpacing: 0.6,
+    },
+    selectionValue: {
+        fontFamily: constants.fonts.HSR,
+        fontSize: 14,
+        fontWeight: "600",
+        color: constants.colors.foreground,
+        marginTop: 2,
+    },
+    selectionDivider: {
+        width: StyleSheet.hairlineWidth,
+        height: 28,
+        backgroundColor: constants.colors.border,
+        marginHorizontal: 12,
+    },
+
+    // ─── Export Tiles ─────────────────────────────
+    exportRow: {
+        flexDirection: "row",
+        gap: 10,
+    },
+    exportTile: {
+        flex: 1,
         borderRadius: 14,
         padding: 16,
-        gap: 14,
+        alignItems: "flex-start",
+    },
+    exportTilePrimary: {
+        backgroundColor: constants.colors.primary,
+    },
+    exportTilePrimaryPressed: {
+        backgroundColor: "#1465B8",
+    },
+    exportTileSecondary: {
+        backgroundColor: constants.colors.card,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: constants.colors.border,
     },
-    exportCardPressed: {
-        opacity: 0.92,
+    exportTileSecondaryPressed: {
         backgroundColor: constants.colors.border,
     },
-    exportIconWrap: {
+    exportTileIconWrap: {
         width: 44,
         height: 44,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
+        backgroundColor: "rgba(255,255,255,0.2)",
     },
-    exportIcon: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 13,
-        fontWeight: "800",
-        color: "#fff",
+    exportTileIcon: {
+        width: 22,
+        height: 22,
+        tintColor: "#fff",
     },
-    exportBody: {
-        flex: 1,
-    },
-    exportTitle: {
+    exportTilePdf: {
         fontFamily: constants.fonts.HSR,
         fontSize: 15,
-        fontWeight: "600",
-        color: constants.colors.foreground,
+        fontWeight: "800",
+        color: constants.colors.info,
     },
-    exportDesc: {
+    exportTileTitle: {
+        fontFamily: constants.fonts.HSR,
+        fontSize: 15,
+        fontWeight: "700",
+        marginTop: 12,
+    },
+    exportTileTitlePrimary: {
+        color: constants.colors.foregroundInverse,
+    },
+    exportTileDesc: {
         fontFamily: constants.fonts.HSR,
         fontSize: 12,
-        color: constants.colors.mute,
         marginTop: 2,
     },
-    exportArrow: {
-        fontSize: 18,
-        color: constants.colors.mute,
-        fontWeight: "300",
+    exportTileDescPrimary: {
+        color: "rgba(255,255,255,0.8)",
+    },
+    exportTileAction: {
+        marginTop: 12,
+        alignSelf: "stretch",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 8,
+        borderRadius: 8,
+        backgroundColor: "rgba(255,255,255,0.22)",
+    },
+    exportTileActionText: {
+        fontFamily: constants.fonts.HSR,
+        fontSize: 13,
+        fontWeight: "700",
+        color: "#fff",
     },
 
     // ─── Import ────────────────────────────────────
@@ -1074,8 +1024,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    importBigIconText: {
-        fontSize: 24,
+    importBody: {
+        flex: 1,
     },
     importCardTitle: {
         fontFamily: constants.fonts.HSR,
@@ -1167,65 +1117,5 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: constants.colors.foreground,
         fontWeight: "500",
-    },
-
-    // ─── Modal ─────────────────────────────────────
-    modalOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(0,0,0,0.45)",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 24,
-        zIndex: 200,
-    },
-    modalCard: {
-        width: "100%",
-        backgroundColor: constants.colors.card,
-        borderRadius: 16,
-        padding: 20,
-    },
-    modalTitle: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 16,
-        fontWeight: "600",
-        color: constants.colors.foreground,
-        textAlign: "center",
-        marginBottom: 12,
-    },
-    modalInput: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 13,
-        color: constants.colors.foreground,
-        backgroundColor: constants.colors.background,
-        borderColor: constants.colors.border,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderRadius: 10,
-        padding: 12,
-        minHeight: 160,
-        maxHeight: 300,
-        textAlignVertical: "top",
-    },
-    modalActions: {
-        flexDirection: "row",
-        gap: 10,
-        marginTop: 14,
-    },
-    modalBtn: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 12,
-        borderRadius: 10,
-    },
-    modalBtnCancel: {
-        backgroundColor: constants.colors.background,
-    },
-    modalBtnConfirm: {
-        backgroundColor: constants.colors.primary,
-    },
-    modalBtnText: {
-        fontFamily: constants.fonts.HSR,
-        fontSize: 14,
-        fontWeight: "600",
     },
 });

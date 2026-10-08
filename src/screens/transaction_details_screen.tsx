@@ -10,7 +10,7 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { format } from "date-fns";
-import { constants } from "../utils/constants";
+import { constants, formatAmount } from "../utils/constants";
 import { toast } from "../utils/toast";
 import { deleteTransaction, getTransactionById } from "../lib/db";
 import { Transaction } from "../lib/db/types";
@@ -79,7 +79,7 @@ export default function TransactionDetailsScreen() {
                     {tx.type === "income" ? "Income" : "Expense"}
                 </Text>
                 <Text style={[styles.amountText, { color: accentColor }]}>
-                    {isIncome ? "+" : "-"}{tx.amount.toFixed(2)}
+                    {isIncome ? "+" : "-"}{formatAmount(tx.amount)}
                 </Text>
             </View>
 

@@ -1,3 +1,5 @@
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useState } from "react";
 import {
     FlatList,
@@ -7,19 +9,18 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { useSQLiteContext } from "expo-sqlite";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { constants } from "../utils/constants";
-import { showToast } from "../utils/toast";
-import { getAllWallets, getTransactionSummaryByWallet, getTransactionCountByWallet } from "../lib/db";
+import { getAllWallets, getTransactionCountByWallet, getTransactionSummaryByWallet } from "../lib/db";
 import type { Wallet } from "../lib/db/types";
 import { RootStackNavigationProp } from "../lib/navigation";
+import { constants, formatAmount } from "../utils/constants";
 
 type WalletWithStats = Wallet & { income: number; expense: number; count: number };
 
 
 
 function EmptyState() {
+    const navigation = useNavigation<RootStackNavigationProp>();
+
     return (
         <View style={styles.empty}>
             <View style={styles.emptyIconCircle}>
@@ -30,6 +31,23 @@ function EmptyState() {
             </View>
             <Text style={styles.emptyTitle}>No Wallets Yet</Text>
             <Text style={styles.emptySubtitle}>Create your first wallet to start tracking.</Text>
+
+            <TouchableOpacity
+                onPress={() => {
+                    navigation.navigate('createWallet')
+                }}
+                style={{
+                    backgroundColor: constants.colors.primary,
+                    padding: 12,
+                    borderRadius: 6,
+                    width: '100%',
+                    marginTop: 16
+                }}>
+                <Text style={{
+                    textAlign: 'center',
+                    color: constants.colors.foregroundInverse
+                }}>Create New Wallet</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -94,21 +112,21 @@ export default function WalletsScreen() {
                             <View style={styles.stat}>
                                 <Text style={[styles.statLabel, { color: constants.colors.success }]}>Income</Text>
                                 <Text style={[styles.statValue, { color: constants.colors.success }]}>
-                                    +{item.income.toFixed(2)}
+                                    +{formatAmount(item.income)}
                                 </Text>
                             </View>
                             <View style={styles.statDivider} />
                             <View style={styles.stat}>
                                 <Text style={[styles.statLabel, { color: constants.colors.danger }]}>Expense</Text>
                                 <Text style={[styles.statValue, { color: constants.colors.danger }]}>
-                                    -{item.expense.toFixed(2)}
+                                    -{formatAmount(item.expense)}
                                 </Text>
                             </View>
                             <View style={styles.statDivider} />
                             <View style={styles.stat}>
                                 <Text style={[styles.statLabel, { color: constants.colors.info }]}>Balance</Text>
                                 <Text style={[styles.statValue, { color: constants.colors.info }]}>
-                                    {(item.income - item.expense).toFixed(2)}
+                                    {formatAmount(item.income - item.expense)}
                                 </Text>
                             </View>
                         </View>
@@ -120,6 +138,18 @@ export default function WalletsScreen() {
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
             />
+
+            <TouchableOpacity
+                style={styles.addFAB}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate("createWallet")}
+            >
+                <Image
+                    source={require("@/assets/icons/plus.png")}
+                    style={styles.addFABIcon}
+                    resizeMode="contain"
+                />
+            </TouchableOpacity>
         </View>
     );
 }
@@ -128,6 +158,27 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: constants.colors.background,
+    },
+    addFAB: {
+        position: "absolute",
+        right: 20,
+        bottom: 20,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: constants.colors.primary,
+        alignItems: "center",
+        justifyContent: "center",
+        elevation: 6,
+        shadowColor: "#000",
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+    },
+    addFABIcon: {
+        width: 24,
+        height: 24,
+        tintColor: constants.colors.foregroundInverse,
     },
     listContent: {
         flexGrow: 1,

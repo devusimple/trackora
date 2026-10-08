@@ -10,7 +10,7 @@ export default function Header() {
     const insets = useSafeAreaInsets();
     return (
         <View style={[styles.header, { paddingTop: Platform.OS === "ios" ? insets.top + 8 : 32 }]}>
-            <Image source={require('@/assets/logo.png')} style={{ width: 40, height: 40 }} />
+            <Image source={require('@/assets/images/icon.png')} style={{ width: 48, height: 48 }} />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <TouchableOpacity
                     onPress={() => {

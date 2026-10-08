@@ -1,5 +1,5 @@
 import { Animated, Image, PanResponder, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { constants } from "../utils/constants";
+import { constants, formatAmount } from "../utils/constants";
 import { Transaction } from "../lib/db/types";
 import { format } from "date-fns";
 import { useRef } from "react";
@@ -114,7 +114,7 @@ export default function TransactionItem({ transaction, onPress, onEdit, onDelete
                             styles.amount,
                             { color: transaction.type === "expense" ? constants.colors.danger : constants.colors.success }
                         ]}>
-                            {transaction.type === "income" ? "+" : "-"}{transaction.amount}
+                            {transaction.type === "income" ? "+" : "-"}{formatAmount(transaction.amount)}
                         </Text>
                     </View>
                     <View style={styles.bottomRow}>

@@ -18,7 +18,7 @@ import type { SearchFilters } from "../lib/db";
 import { getAllWallets, searchTransactions, searchWallets } from "../lib/db";
 import type { Transaction, Wallet } from "../lib/db/types";
 import { RootStackNavigationProp } from "../lib/navigation";
-import { constants } from "../utils/constants";
+import { constants, formatAmount } from "../utils/constants";
 
 const DEFAULT_FILTERS: SearchFilters = {
     type: "all",
@@ -398,7 +398,7 @@ function TransactionRow({
                     ]}
                 >
                     {transaction.type === "income" ? "+" : "-"}
-                    {transaction.amount}
+                    {formatAmount(transaction.amount)}
                 </Text>
             </View>
             <View style={tr.bottom}>

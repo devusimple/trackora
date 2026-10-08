@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { constants } from "../utils/constants";
+import { constants, formatAmount } from "../utils/constants";
 import { useSQLiteContext } from "expo-sqlite";
 import { store } from "../lib/store";
 
@@ -15,6 +15,7 @@ export default function SummaryCard() {
     const setSummaryType = store((s) => s.setSummaryType);
     const selectedMonth = store((s) => s.selectedMonth);
     const summary = store((s) => s.summary);
+    const totalSummary = store((s) => s.totalSummary);
     const loadData = store((s) => s.loadData);
 
     useEffect(() => {
@@ -24,8 +25,8 @@ export default function SummaryCard() {
     const monthLabel = MONTH_NAMES[selectedMonth.getMonth()];
 
     function handleTab(type: typeof summaryType) {
+        // The effect on [summaryType] re-fetches data; no need to load here too.
         setSummaryType(type);
-        loadData(db);
     }
 
     return (
@@ -33,27 +34,36 @@ export default function SummaryCard() {
             <View style={[styles.card]}>
                 <View style={[styles.header]}>
                     <TouchableOpacity onPress={() => handleTab("today")} style={[styles.headerBtn, summaryType === "today" && styles.headerBtnAct]}>
-                        <Text style={[summaryType === "today" && styles.headerBtnTxt]}>Today</Text>
+                        <Text style={[styles.headerBtnText, summaryType === "today" && styles.headerBtnTextAct]}>Today</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleTab("month")} style={[styles.headerBtn, summaryType === "month" && styles.headerBtnAct]}>
-                        <Text style={[summaryType === "month" && styles.headerBtnTxt]}>{monthLabel}</Text>
+                        <Text style={[styles.headerBtnText, summaryType === "month" && styles.headerBtnTextAct]}>{monthLabel}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleTab("total")} style={[styles.headerBtn, summaryType === "total" && styles.headerBtnAct]}>
-                        <Text style={[summaryType === "total" && styles.headerBtnTxt]}>Total</Text>
+                        <Text style={[styles.headerBtnText, summaryType === "total" && styles.headerBtnTextAct]}>Total</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={[styles.summaryRow]}>
                     <View style={[styles.summaryRowItem]}>
                         <Text style={[styles.summaryRowItemLabel, { color: constants.colors.success }]}>Income</Text>
-                        <Text style={[styles.summaryRowItemValue, { color: constants.colors.success }]}>{summary.total_income}</Text>
+                        <Text style={[styles.summaryRowItemValue, { color: constants.colors.success }]}
+                            adjustsFontSizeToFit numberOfLines={1} minimumFontScale={0.7}>
+                            {formatAmount(summary.total_income)}
+                        </Text>
                     </View>
                     <View style={[styles.summaryRowItem]}>
                         <Text style={[styles.summaryRowItemLabel, { color: constants.colors.danger }]}>Expense</Text>
-                        <Text style={[styles.summaryRowItemValue, { color: constants.colors.danger }]}>{summary.total_expense}</Text>
+                        <Text style={[styles.summaryRowItemValue, { color: constants.colors.danger }]}
+                            adjustsFontSizeToFit numberOfLines={1} minimumFontScale={0.7}>
+                            {formatAmount(summary.total_expense)}
+                        </Text>
                     </View>
                     <View style={[styles.summaryRowItem]}>
                         <Text style={[styles.summaryRowItemLabel, { color: constants.colors.info }]}>Balance</Text>
-                        <Text style={[styles.summaryRowItemValue, { color: constants.colors.info }]}>{summary.balance}</Text>
+                        <Text style={[styles.summaryRowItemValue, { color: totalSummary.balance < 0 ? constants.colors.danger : constants.colors.info }]}
+                            adjustsFontSizeToFit numberOfLines={1} minimumFontScale={0.7}>
+                            {formatAmount(totalSummary.balance)}
+                        </Text>
                     </View>
                 </View>
             </View>
@@ -91,11 +101,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: 5,
     },
-    headerBtnTxt: {
-        color: constants.colors.foregroundInverse,
+    headerBtnText: {
+        fontFamily: constants.fonts.HSR,
         letterSpacing: 1.1,
-        fontWeight: 'bold',
-        fontFamily: constants.fonts.HSR
+        fontWeight: "600",
+        color: constants.colors.mute,
+    },
+    headerBtnTextAct: {
+        color: constants.colors.foregroundInverse,
+        fontWeight: "bold",
     },
     headerBtnAct: {
         backgroundColor: constants.colors.primary,
@@ -117,6 +131,7 @@ const styles = StyleSheet.create({
     summaryRowItemValue: {
         fontWeight: 'bold',
         letterSpacing: 1.1,
-        fontFamily: constants.fonts.HSR
+        fontFamily: constants.fonts.HSR,
+        fontSize: 15
     }
 })

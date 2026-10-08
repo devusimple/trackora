@@ -207,7 +207,7 @@ export default function CreateTransactionScreen() {
                             style={{ width: 24, height: 24, tintColor: type === "income" ? constants.colors.success : constants.colors.danger }}
                         />
                         <View style={[styles.dropInput]}>
-                            <Text style={[styles.dropInputLabel]}>{pickedWallet?.label}</Text>
+                            <Text style={[styles.dropInputLabel]}>{pickedWallet?.label || "Select a wallet"}</Text>
                             <Image
                                 source={require("@/assets/icons/arrow-down-2.png")}
                                 style={{ width: 24, height: 24, tintColor: type === "income" ? constants.colors.success : constants.colors.danger }}
@@ -233,6 +233,35 @@ export default function CreateTransactionScreen() {
                     onClose={() => setVisibleWalletPicker(false)}
                     onSelect={(item) => setPickedWallet({ label: item.label, value: item.value })}
                     items={walletOptions}
+                    emptyComponent={
+                        <View style={{
+                            alignItems: 'center',
+                            margin: 12,
+                        }}>
+                            <Image source={require("@/assets/icons/wallet.png")} tintColor={constants.colors.primary} />
+                            <Text style={{
+                                fontSize: 18,
+                                fontFamily: constants.fonts.HSR
+                            }}>No wallet found</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    navigation.navigate('createWallet');
+                                    setVisibleWalletPicker(false);
+                                }}
+                                activeOpacity={0.7}
+                                style={{
+                                    backgroundColor: constants.colors.success,
+                                    padding: 8,
+                                    width: '90%',
+                                    marginTop: 12
+                                }}>
+                                <Text style={{
+                                    color: constants.colors.foregroundInverse,
+                                    textAlign: 'center'
+                                }}>Create New Wallet</Text>
+                            </TouchableOpacity>
+                        </View>
+                    }
                     selectedValue={pickedWallet ? pickedWallet.value : null}
                     title="Choose a Wallet"
                     selectedItemStyle={{

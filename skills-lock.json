@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "customization-migrator": {
+      "source": "react-native-nitro-google-sign-in/google-signin",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/customization-migrator/SKILL.md",
+      "computedHash": "4741e5f6287154bcda35102632341d10f89db4c8a8341809aae4cd0c819332ff"
+    },
+    "expo-upgrade": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-upgrade/SKILL.md",
+      "computedHash": "559b154c068eed3c19c601f74ea1a6cdb528f5b5943522a3e4d5b40ac6ef54d3"
+    },
+    "issue-fixer": {
+      "source": "react-native-nitro-google-sign-in/google-signin",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/issue-fixer/SKILL.md",
+      "computedHash": "fe1a1faa8cd3adc7fc1c59ac6aae0988cd7a37aaa6fa00a756a1664ea9a19180"
+    },
+    "react-native-nitro-google-signin": {
+      "source": "react-native-nitro-google-sign-in/google-signin",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-nitro-google-signin/SKILL.md",
+      "computedHash": "e5c6928864dbd4f403b6451f71ebb3ee74d8fd5958a5e3af12a3f19fa0395c5c"
+    }
+  }
+}

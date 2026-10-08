@@ -8,6 +8,7 @@ import {
     getAllTransactionsByMonth,
 } from "./db";
 import type { Transaction, TransactionSummary } from "./db/types";
+import { maybeAutoBackup } from "./cloud_backup";
 
 export type SummaryType = "today" | "month" | "total";
 
@@ -19,6 +20,8 @@ interface Store {
     filterType: "all" | "income" | "expense";
     setFilterType: (type: "all" | "income" | "expense") => void;
     summary: TransactionSummary;
+    /** All-time summary; drives the Balance tile regardless of the active period tab. */
+    totalSummary: TransactionSummary;
     transactions: Transaction[];
     loadData: (db: SQLiteDatabase) => Promise<void>;
 }
@@ -43,9 +46,13 @@ export const store = create<Store>((set, get) => ({
     filterType: "all",
     setFilterType: (type) => set({ filterType: type }),
     summary: { total_income: 0, total_expense: 0, balance: 0 },
+    totalSummary: { total_income: 0, total_expense: 0, balance: 0 },
     transactions: [],
 
     loadData: async (db) => {
+        // Silent, throttled cloud backup check (never blocks or throws).
+        maybeAutoBackup(db);
+
         const { summaryType, selectedMonth, filterType } = get();
 
         // ── Summary ──────────────────────────────────
@@ -60,6 +67,11 @@ export const store = create<Store>((set, get) => ({
         } else {
             summaryResult = await getTransactionSummary(db);
         }
+
+        // All-time summary (drives the always-current Balance tile).
+        // Reuse the period result when the period is already "total".
+        const totalSummaryResult =
+            summaryType === "total" ? summaryResult : await getTransactionSummary(db);
 
         // ── Transactions ─────────────────────────────
         let txResult: Transaction[];
@@ -79,6 +91,6 @@ export const store = create<Store>((set, get) => ({
             txResult = txResult.filter((t) => t.type === filterType);
         }
 
-        set({ summary: summaryResult, transactions: txResult });
+        set({ summary: summaryResult, transactions: txResult, totalSummary: totalSummaryResult });
     },
 }));

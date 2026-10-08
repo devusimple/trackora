@@ -10,7 +10,7 @@ import {
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { format } from "date-fns";
-import { constants } from "../utils/constants";
+import { constants, formatAmount } from "../utils/constants";
 import { toast } from "../utils/toast";
 import {
     getWalletById,
@@ -120,21 +120,21 @@ export default function WalletDetailsScreen() {
                             <View style={styles.summaryItem}>
                                 <Text style={[styles.summaryLabel, { color: constants.colors.success }]}>Income</Text>
                                 <Text style={[styles.summaryValue, { color: constants.colors.success }]}>
-                                    +{summary.total_income.toFixed(2)}
+                                    +{formatAmount(summary.total_income)}
                                 </Text>
                             </View>
                             <View style={styles.summaryDivider} />
                             <View style={styles.summaryItem}>
                                 <Text style={[styles.summaryLabel, { color: constants.colors.danger }]}>Expense</Text>
                                 <Text style={[styles.summaryValue, { color: constants.colors.danger }]}>
-                                    -{summary.total_expense.toFixed(2)}
+                                    -{formatAmount(summary.total_expense)}
                                 </Text>
                             </View>
                             <View style={styles.summaryDivider} />
                             <View style={styles.summaryItem}>
                                 <Text style={[styles.summaryLabel, { color: constants.colors.info }]}>Balance</Text>
                                 <Text style={[styles.summaryValue, { color: constants.colors.info }]}>
-                                    {summary.balance >= 0 ? "+" : ""}{summary.balance.toFixed(2)}
+                                    {summary.balance >= 0 ? "+" : ""}{formatAmount(summary.balance)}
                                 </Text>
                             </View>
                         </View>
@@ -186,7 +186,7 @@ export default function WalletDetailsScreen() {
                                 <Text style={styles.txDate}>{format(new Date(item.date), "dd MMM yyyy")}</Text>
                             </View>
                             <Text style={[styles.txAmount, { color }]}>
-                                {isIncome ? "+" : "-"}{item.amount.toFixed(2)}
+                                {isIncome ? "+" : "-"}{formatAmount(item.amount)}
                             </Text>
                         </View>
                     );

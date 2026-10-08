@@ -28,6 +28,7 @@ export type ModalPickerProps<T = any> = {
     title?: string;
     cancelText?: string;
     renderItem?: (item: PickerItem<T>, isSelected: boolean) => React.ReactNode;
+    emptyComponent?: React.JSX.Element;
 
     /** 
      * Extracts a unique key for each item. 
@@ -71,6 +72,7 @@ function ModalPicker<T = any>({
     disabledTextStyle,
     cancelTextStyle,
     cancelStyle,
+    emptyComponent
 }: ModalPickerProps<T>) {
     const { height } = useWindowDimensions();
     const maxHeight = useMemo(() => Math.min(height * 0.6, 480), [height]);
@@ -125,56 +127,65 @@ function ModalPicker<T = any>({
                     <View style={[styles.content, contentStyle]}>
                         {title ? <Text style={[styles.title, titleStyle]}>{title}</Text> : null}
 
-                        <ScrollView
-                            style={styles.list}
-                            contentContainerStyle={styles.listContent}
-                            showsVerticalScrollIndicator={false}
-                            bounces={false}
-                        >
-                            {items.map((item, index) => {
-                                const isSelected = item.value === selectedValue;
-
-                                if (renderItem) {
-                                    return (
-                                        <Pressable
-                                            key={getKey(item, index)}
-                                            onPress={() => handleSelect(item)}
-                                            disabled={item.disabled}
-                                        >
-                                            {renderItem(item, isSelected)}
-                                        </Pressable>
-                                    );
-                                }
-
-                                return (
-                                    <Pressable
-                                        key={getKey(item, index)}
-                                        onPress={() => handleSelect(item)}
-                                        disabled={item.disabled}
-                                        style={({ pressed }) => [
-                                            styles.item,
-                                            isSelected && styles.itemSelected,
-                                            isSelected && selectedItemStyle,
-                                            pressed && styles.itemPressed,
-                                            itemStyle,
-                                        ]}
+                        {
+                            items.length > 0
+                                ? (
+                                    <ScrollView
+                                        style={styles.list}
+                                        contentContainerStyle={styles.listContent}
+                                        showsVerticalScrollIndicator={false}
+                                        bounces={false}
                                     >
-                                        <Text
-                                            style={[
-                                                styles.text,
-                                                isSelected && styles.textSelected,
-                                                isSelected && selectedTextStyle,
-                                                item.disabled && styles.textDisabled,
-                                                item.disabled && disabledTextStyle,
-                                                textStyle,
-                                            ]}
-                                        >
-                                            {item.label}
-                                        </Text>
-                                    </Pressable>
-                                );
-                            })}
-                        </ScrollView>
+                                        {items.map((item, index) => {
+                                            const isSelected = item.value === selectedValue;
+
+                                            if (renderItem) {
+                                                return (
+                                                    <Pressable
+                                                        key={getKey(item, index)}
+                                                        onPress={() => handleSelect(item)}
+                                                        disabled={item.disabled}
+                                                    >
+                                                        {renderItem(item, isSelected)}
+                                                    </Pressable>
+                                                );
+                                            }
+
+                                            return (
+                                                <Pressable
+                                                    key={getKey(item, index)}
+                                                    onPress={() => handleSelect(item)}
+                                                    disabled={item.disabled}
+                                                    style={({ pressed }) => [
+                                                        styles.item,
+                                                        isSelected && styles.itemSelected,
+                                                        isSelected && selectedItemStyle,
+                                                        pressed && styles.itemPressed,
+                                                        itemStyle,
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            styles.text,
+                                                            isSelected && styles.textSelected,
+                                                            isSelected && selectedTextStyle,
+                                                            item.disabled && styles.textDisabled,
+                                                            item.disabled && disabledTextStyle,
+                                                            textStyle,
+                                                        ]}
+                                                    >
+                                                        {item.label}
+                                                    </Text>
+                                                </Pressable>
+                                            );
+                                        })}
+                                    </ScrollView>
+
+                                )
+                                : (
+                                    emptyComponent && emptyComponent
+                                )
+                        }
 
                         {cancelText ? (
                             <Pressable

@@ -1,6 +1,7 @@
 import { Animated, Image, ImageSourcePropType, Pressable, StyleSheet, TouchableOpacity } from "react-native";
 import { constants } from "../utils/constants";
 import { useState, useRef, useEffect } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type FABAction = {
     icon: ImageSourcePropType;
@@ -19,6 +20,7 @@ const GAP_SUB = 4;
 export default function FAB({ actions }: FABProps) {
     const [isOpen, setIsOpen] = useState(false);
     const animValue = useRef(new Animated.Value(0)).current;
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         Animated.timing(animValue, {
@@ -53,7 +55,7 @@ export default function FAB({ actions }: FABProps) {
                     onPress={() => setIsOpen(false)}
                 />
             )}
-            <Animated.View style={[styles.container, { width: containerWidth }]}>
+            <Animated.View style={[styles.container, { width: containerWidth, bottom: insets.bottom + 20 }]}>
                 <Animated.View
                     style={[
                         styles.subButtonContainer,
@@ -106,7 +108,6 @@ const styles = StyleSheet.create({
     container: {
         position: "absolute",
         height: 60,
-        bottom: 20,
         right: 20,
         borderRadius: 999,
         alignItems: "center",

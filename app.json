@@ -2,9 +2,9 @@
   "expo": {
     "name": "Trackora",
     "slug": "trackora",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "default",
-    "icon": "./assets/app-icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": [
       "trackora",
       "finance",
@@ -16,9 +16,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "monochromeImage": "./assets/monochrome-icon.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.devusimple.trackora",
@@ -29,7 +30,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-sqlite",
@@ -38,18 +39,25 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F5F5F5",
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 220
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 150
+        }
+      ],
+      [
+        "react-native-nitro-google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_YOUR_REVERSED_CLIENT_ID"
         }
       ]
     ],
     "extra": {
       "eas": {
-        "projectId": "4b176c66-9a65-482a-8179-c9a2e581149b",
-      }
+        "projectId": "4b176c66-9a65-482a-8179-c9a2e581149b"
+      },
+      "googleWebClientId": "917156111193-qc4h5hfjukuovp13mkrhkla1ro5nomvo.apps.googleusercontent.com"
     },
     "owner": "devusimple",
-    "githubUrl": "https://github.com/devusimple/trackora",
+    "githubUrl": "https://github.com/devusimple/trackora"
   }
 }
